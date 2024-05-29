@@ -1,0 +1,195 @@
+version: "3.2"
+
+services:
+
+  api:
+    build:
+      context: .
+    image: conduit
+    env_file: docker-compose.env
+    environment:
+      SERVICES: api
+      PORT: 3000
+    links:
+      - redis
+    depends_on:
+      - redis
+      # - fluentd
+    labels:
+      - "traefik.enable=true"
+      - "traefik.backend=api"
+      - "traefik.port=3000"
+      - "traefik.frontend.entryPoints=http"
+      - "traefik.frontend.rule=PathPrefix:/"
+    # logging:
+    #   driver: fluentd
+    #   options:
+    #     fluentd-address: fluentd:24224
+
+  articles:
+    build:
+      context: .
+    image: conduit
+    env_file: docker-compose.env
+    environment:
+      SERVICES: articles
+    links:
+      - redis
+      - mongo
+    depends_on:
+      - redis
+      - mongo
+    #   - fluentd
+    # logging:
+    #   driver: fluentd
+    #   options:
+    #     fluentd-address: fluentd:24224
+
+  comments:
+    build:
+      context: .
+    image: conduit
+    env_file: docker-compose.env
+    environment:
+      SERVICES: comments
+    links:
+      - redis
+      - mongo
+    depends_on:
+      - redis
+      - mongo
+    #   - fluentd
+    # logging:
+    #   driver: fluentd
+    #   options:
+    #     fluentd-address: fluentd:24224
+
+  favorites:
+    build:
+      context: .
+    image: conduit
+    env_file: docker-compose.env
+    environment:
+      SERVICES: favorites
+    links:
+      - redis
+      - mongo
+    depends_on:
+      - redis
+      - mongo
+      # - fluentd
+    # logging:
+    #   driver: fluentd
+    #   options:
+    #     fluentd-address: fluentd:24224
+
+  follows:
+    build:
+      context: .
+    image: conduit
+    env_file: docker-compose.env
+    environment:
+      SERVICES: follows
+    links:
+      - redis
+      - mongo
+    depends_on:
+      - redis
+      - mongo
+      # - fluentd
+    # logging:
+    #   driver: fluentd
+    #   options:
+    #     fluentd-address: fluentd:24224
+
+  users:
+    build:
+      context: .
+    image: conduit
+    env_file: docker-compose.env
+    environment:
+      SERVICES: users
+    links:
+      - redis
+      - mongo
+    depends_on:
+      - redis
+      - mongo
+      # - fluentd
+    # logging:
+    #   driver: fluentd
+    #   options:
+    #     fluentd-address: fluentd:24224
+
+  orders:
+    build:
+      context: .
+    image: conduit
+    env_file: docker-compose.env
+    environment:
+      SERVICES: orders
+    links:
+      - redis
+      - mongo
+    depends_on:
+      - redis
+      - mongo
+      # - fluentd
+    # logging:
+    #   driver: fluentd
+    #   options:
+    #     fluentd-address: fluentd:24224
+
+  redis:
+    image: redis:alpine
+
+  mongo:
+    image: mongo
+    volumes:
+      - ./db:/data/db
+    ports:
+      - "27017:27017"
+
+  traefik:
+    image: traefik:1.7
+    command: --web --docker --docker.domain=docker.localhost --logLevel=INFO --docker.exposedbydefault=false
+    ports:
+      - "3000:80"
+      - "3001:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /dev/null:/traefik.toml
+
+  # fluentd:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.fluentd
+  #   ports:
+  #     - "24224:24224"
+  #   depends_on:
+  #     - mongo
+
+  # elasticsearch:
+  #   image: docker.io/elasticsearch:7.9.3
+  #   environment:
+  #     - discovery.type=single-node
+  #   ports:
+  #     - "9200:9200"
+  #   depends_on:
+  #     - fluentd
+
+  # grafana:
+  #   image: grafana/grafana:7.3.1
+  #   ports:
+  #     - "3002:3000"
+  #   depends_on:
+  #     - loki
+  #     - elasticsearch
+
+  # loki:
+  #   image: grafana/loki:2.0.0
+  #   ports:
+  #     - "3100:3100"
+  #   command: -config.file=/etc/loki/local-config.yaml
+  #   volumes:
+  #     - ./loki-local-config.yaml:/etc/loki/local-config.yaml
